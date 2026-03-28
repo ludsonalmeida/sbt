@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── USUÁRIO ──────────────────────────────────────────
+model User {
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  phone          String?
+  passwordHash   String
+  role           Role      @default(USER)
+
+  // localização
+  bairro         String?
+  cidade         String    @default("Sobradinho")
+
+  // gostos aprendidos (jsonb: { gastronomia: 0.9, natureza: 0.4 })
+  preferences    Json?
+  onboardingDone Boolean   @default(false)
+
+  // opt-in explícito de canais
+  acceptEmail    Boolean   @default(false)
+  acceptWhatsapp Boolean   @default(false)
+
+  // rede / referral
+  referralCode   String    @unique @default(cuid())
+  referredById   String?
+  referredBy     User?     @relation("Referrals", fields: [referredById], references: [id])
+  referrals      User[]    @relation("Referrals")
+
+  conversations  Conversation[]
+  savedPlaces    SavedPlace[]
+  prefLogs       UserPreferenceLog[]
+  refreshTokens  RefreshToken[]
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+enum Role {
+  USER
+  OWNER
+  ADMIN
+}
+
+// ── DONO DE ESTABELECIMENTO ──────────────────────────
+model Owner {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  cnpj         String?
+  businessName String?
+  verified     Boolean  @default(false)
+  places       Place[]
+  createdAt    DateTime @default(now())
+}
+
+// ── LUGAR / ESTABELECIMENTO ──────────────────────────
+model Place {
+  id            String    @id @default(cuid())
+  name          String
+  category      String
+  googlePlaceId String?   @unique
+  googleRating  Float?
+  googleTotal   Int?
+  address       String?
+  lat           Float?
+  lng           Float?
+  emoji         String?
+
+  // dono pode enriquecer os dados
+  ownerId       String?
+  owner         Owner?    @relation(fields: [ownerId], references: [id])
+  // { fotos_own, descricao, horarios, menu, diferenciais }
+  enrichment    Json?
+  verified      Boolean   @default(false)
+
+  // patrocínio (futuro)
+  sponsored     Boolean   @default(false)
+  sponsorBudget Float?    // R$/dia
+  sponsorStart  DateTime?
+  sponsorEnd    DateTime?
+
+  savedBy       SavedPlace[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ── SALVOS ───────────────────────────────────────────
+model SavedPlace {
+  id      String   @id @default(cuid())
+  userId  String
+  placeId String
+  user    User     @relation(fields: [userId], references: [id])
+  place   Place    @relation(fields: [placeId], references: [id])
+  savedAt DateTime @default(now())
+  @@unique([userId, placeId])
+}
+
+// ── CONVERSAS ────────────────────────────────────────
+model Conversation {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  sessionId String   @default(cuid())
+  // [{ role, content, places?, timestamp }]
+  messages  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ── LOG DE APRENDIZADO DE PREFERÊNCIAS ───────────────
+model UserPreferenceLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  category  String   // gastronomia, natureza, cultura...
+  delta     Float    // +0.1 clicou, -0.05 ignorou
+  source    String   // onboarding | chat_click | save | dismiss
+  createdAt DateTime @default(now())
+}
+
+// ── AUTH ─────────────────────────────────────────────
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

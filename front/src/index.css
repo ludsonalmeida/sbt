@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn-sol {
+    @apply bg-sol text-[#1A1A18] font-semibold rounded-xl px-6 py-3 transition-all hover:brightness-105 active:scale-[0.98];
+  }
+  .btn-outline {
+    @apply border-2 border-borda text-muted font-semibold rounded-xl px-6 py-3 transition-all hover:border-sol/50;
+  }
+}
