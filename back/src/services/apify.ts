@@ -76,7 +76,7 @@ export async function enrichPlaces(
     throw new Error(`Apify error ${res.status}: ${err}`)
   }
 
-  const items: any[] = await res.json()
+  const items = (await res.json()) as any[]
   const result: Record<string, EnrichedPlace> = {}
 
   for (let i = 0; i < places.length; i++) {

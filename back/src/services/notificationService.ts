@@ -41,7 +41,7 @@ export async function sendWeeklyEmail(userId: string) {
   return { sent: true }
 }
 
-function buildEmailTemplate(name: string, bairro?: string | null, places: PlaceRecommendation[]) {
+function buildEmailTemplate(name: string, bairro: string | null | undefined, places: PlaceRecommendation[]) {
   return `
     <!DOCTYPE html>
     <html>
