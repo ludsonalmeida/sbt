@@ -41,7 +41,7 @@ function TypingDots() {
 }
 
 // ── ChatWindow ────────────────────────────────────────
-export function ChatWindow({ pendingQuery }: { pendingQuery?: () => string | null }) {
+export function ChatWindow({ pendingQuery, onRequireLogin }: { pendingQuery?: () => string | null; onRequireLogin?: () => void }) {
   const { user, accessToken, refreshToken } = useAuthStore()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -75,6 +75,13 @@ export function ChatWindow({ pendingQuery }: { pendingQuery?: () => string | nul
   async function send(text?: string) {
     const msgText = (text ?? input).trim()
     if (!msgText || loading || sendingRef.current) return
+
+    // Require login to chat
+    if (!accessToken) {
+      onRequireLogin?.()
+      return
+    }
+
     sendingRef.current = true
 
     const userMsg: Message = { role: 'user', content: msgText, timestamp: new Date() }
@@ -156,7 +163,7 @@ export function ChatWindow({ pendingQuery }: { pendingQuery?: () => string | nul
     sendingRef.current = false
   }
 
-  const firstName = user?.name.split(' ')[0]
+  const firstName = user?.name?.split(' ')[0] || ''
 
   return (
     <div className="flex flex-col flex-1 h-[calc(100dvh-48px)]">
@@ -180,7 +187,7 @@ export function ChatWindow({ pendingQuery }: { pendingQuery?: () => string | nul
                 </svg>
               </div>
               <p className="font-head font-extrabold text-xl mb-1">
-                Oi, {firstName}!
+                {firstName ? `Oi, ${firstName}!` : 'E aí! Bem-vindo!'}
               </p>
               <p className="text-muted text-sm leading-relaxed max-w-xs mx-auto">
                 Conheço cada esquina de Sobradinho. Me pergunta onde ir, o que comer, o que fazer — e te digo o que é de verdade bom.
