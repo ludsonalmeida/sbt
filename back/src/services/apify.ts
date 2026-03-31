@@ -108,7 +108,7 @@ export async function enrichPlaces(
       permanentlyClosed: !!item.permanentlyClosed,
       temporarilyClosed: !!item.temporarilyClosed,
       topReviews: item.reviews
-        ?.filter((r: any) => r.text?.trim())
+        ?.filter((r: any) => r.text?.trim() && (r.stars ?? 5) >= 4)
         .slice(0, 2)
         .map((r: any) => ({
           text: r.text.slice(0, 220),
