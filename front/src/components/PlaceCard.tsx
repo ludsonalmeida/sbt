@@ -184,7 +184,12 @@ export function PlaceCard({ place, loading = false }: Props) {
                   </svg>
                   {e.hoursToday ?? place.horario}
                 </span>
-                {e.openNow !== undefined && (
+                {e.temporarilyClosed && (
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600">
+                    Temporariamente fechado
+                  </span>
+                )}
+                {!e.temporarilyClosed && e.openNow !== undefined && (
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
                     e.openNow ? 'bg-verde-claro text-cerrado' : 'bg-red-50 text-red-500'
                   }`}>

@@ -13,6 +13,8 @@ export interface EnrichedData {
   price?: string
   hoursToday?: string
   openNow?: boolean
+  permanentlyClosed?: boolean
+  temporarilyClosed?: boolean
   topReviews?: { text: string; rating: number; date: string }[]
   mapsUrl?: string
   lat?: number

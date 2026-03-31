@@ -16,6 +16,8 @@ export interface EnrichedPlace {
   price?: string
   hoursToday?: string
   openNow?: boolean
+  permanentlyClosed?: boolean
+  temporarilyClosed?: boolean
   topReviews?: { text: string; rating: number; date: string }[]
   mapsUrl?: string
   lat?: number
@@ -85,6 +87,12 @@ export async function enrichPlaces(
 
     const todayHours = getTodayHours(item.openingHours)
 
+    // Skip permanently closed places entirely
+    if (item.permanentlyClosed) {
+      console.log(`[enrich] Skipping "${places[i].nome}" — permanently closed`)
+      continue
+    }
+
     result[places[i].nome] = {
       nome: item.title ?? places[i].nome,
       rating: item.totalScore,
@@ -96,9 +104,9 @@ export async function enrichPlaces(
       description: item.description,
       price: item.price,
       hoursToday: todayHours,
-      openNow: item.permanentlyClosed ? false
-              : item.temporarilyClosed ? false
-              : undefined,
+      openNow: item.temporarilyClosed ? false : undefined,
+      permanentlyClosed: !!item.permanentlyClosed,
+      temporarilyClosed: !!item.temporarilyClosed,
       topReviews: item.reviews
         ?.filter((r: any) => r.text?.trim())
         .slice(0, 2)

@@ -134,7 +134,21 @@ export function ChatWindow({ pendingQuery }: { pendingQuery?: () => string | nul
               if (!m.places) return m
               return {
                 ...m,
-                places: m.places.map(p => enriched[p.nome] ? { ...p, enriched: enriched[p.nome] } : p),
+                // Enrich places that got data, filter out ones the backend skipped (permanently closed)
+                places: m.places
+                  .map(p => enriched[p.nome] ? { ...p, enriched: enriched[p.nome] } : p)
+                  .filter(p => {
+                    // If enrichment returned data, keep it (backend already filtered permanently closed)
+                    if (p.enriched) return true
+                    // If enrichment didn't return data for this place, it was filtered out (closed)
+                    // Only remove if this place was in the enrichment request
+                    const wasRequested = places.some(req => req.nome === p.nome)
+                    if (wasRequested && !enriched[p.nome]) {
+                      console.log(`[enrich] Removed "${p.nome}" — not found or permanently closed`)
+                      return false
+                    }
+                    return true
+                  }),
               }
             }))
           })
