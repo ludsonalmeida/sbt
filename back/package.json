@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "prisma generate && tsc",
+    "build": "prisma generate && tsc && cp src/codex-oauth.js dist/codex-oauth.js",
     "start": "node dist/index.js",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
