@@ -185,10 +185,9 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.97 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 bottom-3 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2
-                       sm:w-full sm:max-w-md z-50"
+            className="fixed z-50 inset-3 sm:inset-auto sm:top-0 sm:right-0 sm:bottom-0 sm:left-0 sm:flex sm:items-center sm:justify-center sm:p-4"
           >
-            <div className="card p-5 sm:p-6 shadow-card-hover">
+            <div className="card p-5 sm:p-6 shadow-card-hover max-h-full overflow-y-auto w-full sm:max-w-md relative">
               {/* Close */}
               <button onClick={onClose} className="absolute top-3 right-3 w-8 h-8 rounded-lg hover:bg-areia flex items-center justify-center">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
