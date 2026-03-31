@@ -19,13 +19,16 @@ const allowedOrigins = process.env.FRONTEND_URL
   ? [process.env.FRONTEND_URL]
   : undefined
 
+// Trust proxy (Railway, Render, etc. use reverse proxy)
+app.set('trust proxy', 1)
+
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }))
 app.use(cors({ origin: allowedOrigins ?? true, credentials: true }))
 app.use(cookieParser())
 app.use(express.json())
 
 // rate limit global
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }))
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300, validate: { xForwardedForHeader: false } }))
 
 // API rotas
 app.use('/api/auth', authRoutes)
