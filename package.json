@@ -7,6 +7,9 @@
     "build:front": "cd front && npm run build",
     "build:back": "cd back && npm run build",
     "build": "npm run install:all && npm run build:front && npm run build:back",
+    "db:push": "cd back && npx prisma db push",
+    "db:seed": "cd back && npx tsx prisma/seed.ts",
+    "db:setup": "npm run db:push && npm run db:seed",
     "start": "cd back && npm start"
   }
 }
