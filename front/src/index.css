@@ -9,11 +9,26 @@
     font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
   }
 
+  html {
+    /* iOS safe areas */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
   body {
     font-family: 'Inter', system-ui, sans-serif;
     font-size: 15px;
     color: #1A1A18;
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
   }
+
+  /* Safe area utilities */
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+  /* Prevent iOS zoom on inputs */
+  input, select, textarea { font-size: 16px !important; }
+  @media (min-width: 640px) { input, select, textarea { font-size: inherit !important; } }
 
   /* Emoji always render as color glyph regardless of surrounding font */
   .emoji {
@@ -113,26 +128,30 @@
 
   /* ── Chat bubbles ────────────────────────── */
   .bubble-user {
-    @apply bg-sol text-[#1A1A18] px-4 py-3 rounded-2xl rounded-br-sm whitespace-pre-wrap;
+    @apply bg-sol text-[#1A1A18] px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl rounded-br-sm whitespace-pre-wrap;
     font-family: 'Inter', system-ui, sans-serif;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 400;
-    line-height: 1.6;
+    line-height: 1.55;
     letter-spacing: -0.01em;
     box-shadow: 0 1px 4px rgba(245,166,35,0.30), 0 2px 8px rgba(26,26,24,0.06);
   }
 
   /* Warm off-white — not pure white. Feels like iMessage/WhatsApp received bubble */
   .bubble-bot {
-    @apply text-[#1A1A18] px-4 py-3 rounded-2xl rounded-bl-sm whitespace-pre-wrap;
+    @apply text-[#1A1A18] px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl rounded-bl-sm whitespace-pre-wrap;
     background: #F5F1EB;
     border: 1px solid rgba(232,226,216,0.8);
     font-family: 'Inter', system-ui, sans-serif;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 400;
-    line-height: 1.6;
+    line-height: 1.55;
     letter-spacing: -0.01em;
     box-shadow: 0 1px 3px rgba(26,26,24,0.06);
+  }
+
+  @media (min-width: 640px) {
+    .bubble-user, .bubble-bot { font-size: 15px; line-height: 1.6; }
   }
 
   /* ── Suggestion chips ────────────────────── */

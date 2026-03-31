@@ -134,21 +134,11 @@ export function ChatWindow({ pendingQuery }: { pendingQuery?: () => string | nul
               if (!m.places) return m
               return {
                 ...m,
-                // Enrich places that got data, filter out ones the backend skipped (permanently closed)
-                places: m.places
-                  .map(p => enriched[p.nome] ? { ...p, enriched: enriched[p.nome] } : p)
-                  .filter(p => {
-                    // If enrichment returned data, keep it (backend already filtered permanently closed)
-                    if (p.enriched) return true
-                    // If enrichment didn't return data for this place, it was filtered out (closed)
-                    // Only remove if this place was in the enrichment request
-                    const wasRequested = places.some(req => req.nome === p.nome)
-                    if (wasRequested && !enriched[p.nome]) {
-                      console.log(`[enrich] Removed "${p.nome}" — not found or permanently closed`)
-                      return false
-                    }
-                    return true
-                  }),
+                places: m.places.map(p => {
+                  if (enriched[p.nome]) return { ...p, enriched: enriched[p.nome] }
+                  // Not returned = possibly closed or not found. Mark but keep.
+                  return { ...p, _notFound: true } as any
+                }),
               }
             }))
           })
@@ -169,10 +159,10 @@ export function ChatWindow({ pendingQuery }: { pendingQuery?: () => string | nul
   const firstName = user?.name.split(' ')[0]
 
   return (
-    <div className="flex flex-col flex-1 h-[calc(100dvh-56px)]">
+    <div className="flex flex-col flex-1 h-[calc(100dvh-48px)]">
       {/* ── Mensagens ───────────────────────────────── */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
+        <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-5">
 
           {/* Empty state */}
           {messages.length === 0 && (
@@ -224,7 +214,7 @@ export function ChatWindow({ pendingQuery }: { pendingQuery?: () => string | nul
               >
                 {msg.role === 'assistant' && <BotAvatar />}
 
-                <div className={`max-w-[82%] space-y-3 ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col`}>
+                <div className={`max-w-[88%] sm:max-w-[82%] space-y-2.5 sm:space-y-3 ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col`}>
                   <div className={msg.role === 'user' ? 'bubble-user' : 'bubble-bot'}>
                     {msg.content}
                   </div>
@@ -232,6 +222,7 @@ export function ChatWindow({ pendingQuery }: { pendingQuery?: () => string | nul
                   {msg.places && msg.places.length > 0 && (() => {
                     const anyEnriching = msg.places.some(p => enrichingIds.has(p.id))
                     const anyEnriched = msg.places.some(p => p.enriched)
+                    const showCards = !anyEnriching || anyEnriched
                     return (
                       <div className="space-y-2.5 w-full">
                         {/* Loading state while fetching real data */}
@@ -259,10 +250,20 @@ export function ChatWindow({ pendingQuery }: { pendingQuery?: () => string | nul
                             </div>
                           </div>
                         )}
-                        {/* Show cards once enriched (or if not enriching) */}
-                        {(!anyEnriching || anyEnriched) && msg.places!.map((p: PlaceData) => (
-                          <PlaceCard key={p.id} place={p} loading={enrichingIds.has(p.id)} />
-                        ))}
+                        {/* Show cards once done loading */}
+                        {showCards && msg.places!
+                          .filter((p: any) => !p._notFound)
+                          .map((p: PlaceData) => (
+                            <PlaceCard key={p.id} place={p} loading={enrichingIds.has(p.id)} />
+                          ))
+                        }
+                        {/* Show basic card for places not found on Google */}
+                        {showCards && msg.places!
+                          .filter((p: any) => p._notFound)
+                          .map((p: PlaceData) => (
+                            <PlaceCard key={p.id} place={p} loading={false} />
+                          ))
+                        }
                       </div>
                     )
                   })()}
@@ -290,16 +291,16 @@ export function ChatWindow({ pendingQuery }: { pendingQuery?: () => string | nul
       </div>
 
       {/* ── Input ───────────────────────────────────── */}
-      <div className="border-t border-borda bg-white">
-        <div className="max-w-3xl mx-auto px-4 py-3">
-          <div className="flex gap-2 items-center bg-areia rounded-2xl px-4 py-2 focus-within:ring-2 focus-within:ring-sol/40 transition-all">
+      <div className="border-t border-borda bg-white safe-bottom">
+        <div className="max-w-3xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3">
+          <div className="flex gap-2 items-center bg-areia rounded-2xl px-3 sm:px-4 py-2 focus-within:ring-2 focus-within:ring-sol/40 transition-all">
             <input
               ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), send())}
               placeholder="Pergunta sobre Sobradinho..."
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted/60 py-1.5 font-body"
+              className="flex-1 bg-transparent text-[15px] sm:text-sm outline-none placeholder:text-muted/60 py-1 font-body"
             />
             <button
               onClick={() => send()}

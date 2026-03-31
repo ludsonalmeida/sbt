@@ -88,9 +88,9 @@ function SkylineSVG() {
 // ── Logo ─────────────────────────────────────────────
 function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   const sizes = {
-    sm: { sun: 28, text: 'text-lg', sub: 'text-xs' },
-    md: { sun: 40, text: 'text-2xl', sub: 'text-sm' },
-    lg: { sun: 52, text: 'text-3xl', sub: 'text-base' },
+    sm: { sun: 26, text: 'text-base', sub: 'text-[10px]' },
+    md: { sun: 36, text: 'text-xl', sub: 'text-xs' },
+    lg: { sun: 44, text: 'text-2xl sm:text-3xl', sub: 'text-sm' },
   }
   const s = sizes[size]
   return (
@@ -205,29 +205,29 @@ export default function App() {
         {/* Main content */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Top bar */}
-          <header className="bg-sol sticky top-0 z-30 shadow-sm">
-            <div className="px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+          <header className="bg-sol sticky top-0 z-30 shadow-sm safe-top">
+            <div className="px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <button
                   onClick={() => setSidebarOpen(o => !o)}
-                  className="w-9 h-9 rounded-xl bg-[rgba(26,26,24,0.1)] hover:bg-[rgba(26,26,24,0.18)]
-                             flex items-center justify-center transition-colors"
+                  className="w-8 h-8 rounded-lg bg-[rgba(26,26,24,0.1)] hover:bg-[rgba(26,26,24,0.18)]
+                             flex items-center justify-center transition-colors flex-shrink-0"
                   aria-label="Menu"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" strokeWidth="2" strokeLinecap="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" strokeWidth="2.2" strokeLinecap="round">
                     <path d="M4 7h16M4 12h16M4 17h16"/>
                   </svg>
                 </button>
                 <Logo size="sm" />
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-[#1A1A18]/70 font-body hidden sm:block">
-                  Oi, {user.name.split(' ')[0]}!
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-xs text-[#1A1A18]/60 font-body hidden sm:block">
+                  {user.name.split(' ')[0]}
                 </span>
                 <button
                   onClick={() => logout()}
-                  className="text-xs font-semibold text-[#1A1A18]/70 bg-[rgba(26,26,24,0.1)]
-                             hover:bg-[rgba(26,26,24,0.18)] px-3 py-1.5 rounded-full transition-colors"
+                  className="text-[11px] font-semibold text-[#1A1A18]/60 bg-[rgba(26,26,24,0.1)]
+                             hover:bg-[rgba(26,26,24,0.18)] px-2.5 py-1 rounded-full transition-colors"
                 >
                   Sair
                 </button>
@@ -250,10 +250,10 @@ export default function App() {
   return (
     <div className="min-h-dvh flex flex-col bg-fundo">
       {/* Hero */}
-      <div className="relative bg-sol flex-shrink-0 pt-12 pb-0 overflow-hidden">
-        <div className="max-w-md mx-auto px-6 pb-6 text-center">
+      <div className="relative bg-sol flex-shrink-0 pt-8 sm:pt-12 pb-0 overflow-hidden">
+        <div className="max-w-md mx-auto px-5 pb-4 sm:pb-6 flex flex-col items-center text-center">
           <Logo size="lg" />
-          <p className="text-[#1A1A18]/60 text-sm mt-3 font-body">
+          <p className="text-[#1A1A18]/60 text-xs sm:text-sm mt-2 sm:mt-3 font-body max-w-[260px] sm:max-w-none">
             Tudo que Sobradinho tem de melhor — indicado por quem realmente conhece.
           </p>
         </div>
