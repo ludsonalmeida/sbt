@@ -258,19 +258,32 @@ export function ChatWindow({ pendingQuery, onRequireLogin }: { pendingQuery?: ()
                           </div>
                         )}
                         {/* Show cards once done loading */}
-                        {showCards && msg.places!
-                          .filter((p: any) => !p._notFound)
-                          .map((p: PlaceData) => (
-                            <PlaceCard key={p.id} place={p} loading={enrichingIds.has(p.id)} />
-                          ))
-                        }
-                        {/* Show basic card for places not found on Google */}
-                        {showCards && msg.places!
-                          .filter((p: any) => p._notFound)
-                          .map((p: PlaceData) => (
-                            <PlaceCard key={p.id} place={p} loading={false} />
-                          ))
-                        }
+                        {showCards && (() => {
+                          const found = msg.places!.filter((p: any) => !p._notFound)
+                          const notFound = msg.places!.filter((p: any) => p._notFound)
+                          return (
+                            <>
+                              {found.length > 0 && (
+                                <div className="flex items-center gap-2 px-1 py-1">
+                                  <div className="w-6 h-6 rounded-lg bg-cerrado/15 flex items-center justify-center flex-shrink-0">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4A7C59" strokeWidth="2.5" strokeLinecap="round">
+                                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                                    </svg>
+                                  </div>
+                                  <p className="text-xs font-semibold text-cerrado">
+                                    {found.length === 1 ? 'Encontrei 1 lugar pra você' : `Encontrei ${found.length} lugares pra você`}
+                                  </p>
+                                </div>
+                              )}
+                              {found.map((p: PlaceData) => (
+                                <PlaceCard key={p.id} place={p} loading={enrichingIds.has(p.id)} />
+                              ))}
+                              {notFound.map((p: PlaceData) => (
+                                <PlaceCard key={p.id} place={p} loading={false} />
+                              ))}
+                            </>
+                          )
+                        })()}
                       </div>
                     )
                   })()}
