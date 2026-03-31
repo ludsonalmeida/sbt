@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { PlaceData, EnrichedData } from '../services/chatService'
 
 interface Props {
@@ -89,8 +90,11 @@ function EnrichSkeleton() {
 // ── PlaceCard ─────────────────────────────────────────
 export function PlaceCard({ place, loading = false }: Props) {
   const e = place.enriched
+  const [imgError, setImgError] = useState(false)
   const mapsUrl = e?.mapsUrl ??
     `https://www.google.com/maps/search/${encodeURIComponent(place.nome + ' ' + (place.cidade ?? 'Sobradinho DF'))}`
+
+  const showPhoto = e?.photo && !imgError
 
   return (
     <div className="bg-white rounded-2xl border border-borda/60 overflow-hidden
@@ -98,19 +102,21 @@ export function PlaceCard({ place, loading = false }: Props) {
          style={{ boxShadow: '0 2px 12px rgba(26,26,24,0.08)' }}>
 
       {/* Foto do lugar */}
-      {e?.photo && (
+      {showPhoto && (
         <div className="h-36 overflow-hidden bg-areia">
           <img
-            src={e.photo}
+            src={e!.photo}
             alt={place.nome}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
+            onError={() => setImgError(true)}
+            referrerPolicy="no-referrer"
           />
         </div>
       )}
 
       {/* Accent bar (só sem foto) */}
-      {!e?.photo && <div className="h-1 bg-sol w-full" />}
+      {!showPhoto && <div className="h-1 bg-sol w-full" />}
 
       <div className="p-4">
         {/* Header */}

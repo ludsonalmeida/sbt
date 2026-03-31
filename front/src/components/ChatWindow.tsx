@@ -215,13 +215,43 @@ export function ChatWindow({ pendingQuery }: { pendingQuery?: () => string | nul
                     {msg.content}
                   </div>
 
-                  {msg.places && msg.places.length > 0 && (
-                    <div className="space-y-2.5 w-full">
-                      {msg.places.map((p: PlaceData) => (
-                        <PlaceCard key={p.id} place={p} loading={enrichingIds.has(p.id)} />
-                      ))}
-                    </div>
-                  )}
+                  {msg.places && msg.places.length > 0 && (() => {
+                    const anyEnriching = msg.places.some(p => enrichingIds.has(p.id))
+                    const anyEnriched = msg.places.some(p => p.enriched)
+                    return (
+                      <div className="space-y-2.5 w-full">
+                        {/* Loading state while fetching real data */}
+                        {anyEnriching && !anyEnriched && (
+                          <div className="bg-white rounded-2xl border border-borda/60 p-4"
+                               style={{ boxShadow: '0 2px 12px rgba(26,26,24,0.08)' }}>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl bg-sol/20 flex items-center justify-center flex-shrink-0">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D98C0F" strokeWidth="2" strokeLinecap="round" className="animate-spin">
+                                  <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                                </svg>
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-[#1A1A18]">Buscando os melhores lugares...</p>
+                                <p className="text-xs text-muted/70">Consultando avaliações, fotos e horários reais</p>
+                              </div>
+                            </div>
+                            <div className="mt-3 space-y-2 animate-pulse">
+                              {msg.places!.map((p: PlaceData) => (
+                                <div key={p.id} className="flex items-center gap-2 px-3 py-2 bg-areia/60 rounded-xl">
+                                  <span className="text-base">{p.emoji}</span>
+                                  <span className="text-xs font-medium text-muted">{p.nome}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {/* Show cards once enriched (or if not enriching) */}
+                        {(!anyEnriching || anyEnriched) && msg.places!.map((p: PlaceData) => (
+                          <PlaceCard key={p.id} place={p} loading={enrichingIds.has(p.id)} />
+                        ))}
+                      </div>
+                    )
+                  })()}
                 </div>
               </motion.div>
             ))}
