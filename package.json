@@ -1,0 +1,12 @@
+{
+  "name": "sobradinhotem",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "cd front && npm install && cd ../back && npm install",
+    "build:front": "cd front && npm run build",
+    "build:back": "cd back && npm run build",
+    "build": "npm run install:all && npm run build:front && npm run build:back",
+    "start": "cd back && npm start"
+  }
+}
