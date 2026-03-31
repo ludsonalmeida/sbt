@@ -74,7 +74,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
     }),
-    { name: 'sbt-auth', partialize: (s) => ({ user: s.user }) }
+    { name: 'sbt-auth', partialize: (s) => ({ user: s.user, accessToken: s.accessToken }) }
   )
 )
 

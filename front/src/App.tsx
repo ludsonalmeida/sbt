@@ -1,7 +1,123 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useAuthStore } from './store/authStore'
 import { Onboarding } from './components/Onboarding'
+import { ChatWindow } from './components/ChatWindow'
+import { Sidebar, EstabelecimentosView, NoticiasView, HistoriaView, PerfilView, type SidebarView } from './components/Sidebar'
 
+// ── Ícones inline ────────────────────────────────────
+function IconMail() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="16" height="12" rx="2"/>
+      <path d="M2 7l8 5 8-5"/>
+    </svg>
+  )
+}
+function IconLock() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="9" width="12" height="9" rx="2"/>
+      <path d="M7 9V6a3 3 0 0 1 6 0v3"/>
+    </svg>
+  )
+}
+function IconUser() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="10" cy="7" r="3"/>
+      <path d="M3 18c0-4 3-6 7-6s7 2 7 6"/>
+    </svg>
+  )
+}
+function IconPin() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 18s-7-6.5-7-11a7 7 0 1 1 14 0c0 4.5-7 11-7 11z"/>
+      <circle cx="10" cy="7" r="2.5"/>
+    </svg>
+  )
+}
+
+// ── Skyline SVG ──────────────────────────────────────
+function SkylineSVG() {
+  return (
+    <svg
+      viewBox="0 0 800 120"
+      preserveAspectRatio="xMidYMax slice"
+      className="w-full"
+      aria-hidden="true"
+    >
+      {/* Cidade de Sobradinho — silhueta abstrata */}
+      <g fill="rgba(26,26,24,0.13)">
+        {/* Torre Digital (referência) */}
+        <rect x="55" y="38" width="12" height="82"/>
+        <rect x="49" y="48" width="24" height="5" rx="2"/>
+        <rect x="52" y="20" width="18" height="22" rx="1"/>
+        <circle cx="61" cy="16" r="5"/>
+        {/* Casas e prédios */}
+        <rect x="0" y="70" width="45" height="50"/>
+        <rect x="5" y="58" width="35" height="15" rx="1"/>
+        <rect x="80" y="60" width="55" height="60"/>
+        <rect x="88" y="48" width="40" height="16" rx="1"/>
+        <rect x="145" y="75" width="35" height="45"/>
+        <rect x="148" y="65" width="29" height="14" rx="1"/>
+        <rect x="190" y="50" width="70" height="70"/>
+        <rect x="198" y="38" width="54" height="16" rx="1"/>
+        <rect x="270" y="68" width="40" height="52"/>
+        <rect x="320" y="45" width="60" height="75"/>
+        <rect x="328" y="30" width="44" height="19" rx="1"/>
+        <rect x="390" y="72" width="50" height="48"/>
+        <rect x="450" y="55" width="45" height="65"/>
+        <rect x="458" y="40" width="29" height="19" rx="1"/>
+        <rect x="505" y="65" width="55" height="55"/>
+        <rect x="512" y="50" width="40" height="18" rx="1"/>
+        <rect x="570" y="40" width="65" height="80"/>
+        <rect x="578" y="24" width="49" height="20" rx="1"/>
+        <rect x="645" y="68" width="40" height="52"/>
+        <rect x="695" y="55" width="50" height="65"/>
+        <rect x="703" y="42" width="34" height="17" rx="1"/>
+        <rect x="755" y="72" width="45" height="48"/>
+        {/* Colinas / cerrado ao fundo */}
+        <ellipse cx="200" cy="120" rx="220" ry="55" opacity="0.4"/>
+        <ellipse cx="600" cy="120" rx="260" ry="60" opacity="0.3"/>
+      </g>
+    </svg>
+  )
+}
+
+// ── Logo ─────────────────────────────────────────────
+function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
+  const sizes = {
+    sm: { sun: 28, text: 'text-lg', sub: 'text-xs' },
+    md: { sun: 40, text: 'text-2xl', sub: 'text-sm' },
+    lg: { sun: 52, text: 'text-3xl', sub: 'text-base' },
+  }
+  const s = sizes[size]
+  return (
+    <div className="flex items-center gap-3">
+      <div
+        className="rounded-2xl bg-[rgba(26,26,24,0.15)] flex items-center justify-center flex-shrink-0"
+        style={{ width: s.sun, height: s.sun }}
+      >
+        <svg width={s.sun * 0.58} height={s.sun * 0.58} viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="4.5" fill="#1A1A18"/>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"
+            stroke="#1A1A18" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <p className={`font-head font-extrabold ${s.text} text-[#1A1A18] leading-tight`}>
+          Sobradinho TEM!
+        </p>
+        <p className={`${s.sub} text-[#1A1A18]/60 font-body leading-tight`}>
+          Quem domina Sobradinho
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ── App ──────────────────────────────────────────────
 export default function App() {
   const { user, accessToken, setUser, logout } = useAuthStore()
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -53,128 +169,232 @@ export default function App() {
     setLoading(false)
   }
 
-  // ── Onboarding overlay ──────────────────────
+  // ── Onboarding overlay ──────────────────────────────
   if (showOnboarding && user) {
     return <Onboarding onComplete={() => setShowOnboarding(false)} />
   }
 
-  // ── Logado ──────────────────────────────────
+  // ── Sidebar state ────────────────────────────────────
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [activeView, setActiveView] = useState<SidebarView>('chat')
+  const [pendingChatQuery, setPendingChatQuery] = useState<string | null>(null)
+
+  const handleAskChat = useCallback((query: string) => {
+    setPendingChatQuery(query)
+    setActiveView('chat')
+  }, [])
+
+  const consumePendingQuery = useCallback(() => {
+    const q = pendingChatQuery
+    setPendingChatQuery(null)
+    return q
+  }, [pendingChatQuery])
+
+  // ── Logado ──────────────────────────────────────────
   if (user && accessToken) {
     return (
-      <div className="min-h-screen bg-fundo">
-        <header className="bg-white border-b border-borda px-6 py-4 flex items-center justify-between">
-          <h1 className="font-head font-black text-xl">Sobradinho TEM! <span className="text-2xl">🌇</span></h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted">Oi, {user.name.split(' ')[0]}!</span>
-            <button onClick={() => logout()} className="text-sm text-muted hover:text-sol transition-colors">Sair</button>
-          </div>
-        </header>
-        <main className="max-w-2xl mx-auto p-6">
-          <div className="bg-white rounded-2xl border border-borda p-8 text-center">
-            <div className="text-5xl mb-4">🌇</div>
-            <h2 className="font-head font-black text-2xl mb-2">Bem-vindo ao Sobradinho TEM!</h2>
-            <p className="text-muted text-sm leading-relaxed mb-6">
-              Seu guia local inteligente de Sobradinho-DF. Em breve: chat com IA, recomendações personalizadas e muito mais.
-            </p>
-            {user.preferences && (
-              <div className="text-left bg-fundo rounded-xl p-4">
-                <p className="text-xs font-semibold text-muted mb-2">Suas preferências:</p>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(user.preferences as Record<string, number>)
-                    .filter(([, v]) => v > 0)
-                    .sort(([, a], [, b]) => b - a)
-                    .map(([k, v]) => (
-                      <span key={k} className="bg-laranja-claro text-sol text-xs font-semibold px-3 py-1 rounded-full">
-                        {k} {Math.round(v * 100)}%
-                      </span>
-                    ))}
-                </div>
+      <div className="min-h-dvh flex bg-fundo">
+        {/* Sidebar */}
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          activeView={activeView}
+          onNavigate={setActiveView}
+        />
+
+        {/* Main content */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Top bar */}
+          <header className="bg-sol sticky top-0 z-30 shadow-sm">
+            <div className="px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSidebarOpen(o => !o)}
+                  className="w-9 h-9 rounded-xl bg-[rgba(26,26,24,0.1)] hover:bg-[rgba(26,26,24,0.18)]
+                             flex items-center justify-center transition-colors"
+                  aria-label="Menu"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1A18" strokeWidth="2" strokeLinecap="round">
+                    <path d="M4 7h16M4 12h16M4 17h16"/>
+                  </svg>
+                </button>
+                <Logo size="sm" />
               </div>
-            )}
-          </div>
-        </main>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-[#1A1A18]/70 font-body hidden sm:block">
+                  Oi, {user.name.split(' ')[0]}!
+                </span>
+                <button
+                  onClick={() => logout()}
+                  className="text-xs font-semibold text-[#1A1A18]/70 bg-[rgba(26,26,24,0.1)]
+                             hover:bg-[rgba(26,26,24,0.18)] px-3 py-1.5 rounded-full transition-colors"
+                >
+                  Sair
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* View router */}
+          {activeView === 'chat' && <ChatWindow pendingQuery={consumePendingQuery} />}
+          {activeView === 'estabelecimentos' && <EstabelecimentosView onAskChat={handleAskChat} />}
+          {activeView === 'noticias' && <NoticiasView />}
+          {activeView === 'historia' && <HistoriaView />}
+          {activeView === 'perfil' && <PerfilView />}
+        </div>
       </div>
     )
   }
 
-  // ── Login / Register ────────────────────────
+  // ── Login / Register ────────────────────────────────
   return (
-    <div className="min-h-screen bg-fundo flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-        <div className="bg-sol p-8 text-center">
-          <h1 className="font-head font-black text-3xl text-[#1A1A18]">Sobradinho TEM! 🌇</h1>
-          <p className="text-[#1A1A18]/70 text-sm mt-1">Guia local inteligente de Sobradinho-DF</p>
+    <div className="min-h-dvh flex flex-col bg-fundo">
+      {/* Hero */}
+      <div className="relative bg-sol flex-shrink-0 pt-12 pb-0 overflow-hidden">
+        <div className="max-w-md mx-auto px-6 pb-6 text-center">
+          <Logo size="lg" />
+          <p className="text-[#1A1A18]/60 text-sm mt-3 font-body">
+            Tudo que Sobradinho tem de melhor — indicado por quem realmente conhece.
+          </p>
         </div>
+        {/* Skyline */}
+        <div className="w-full overflow-hidden leading-none">
+          <SkylineSVG />
+        </div>
+      </div>
 
-        <div className="p-8">
-          <div className="flex mb-6 bg-fundo rounded-xl p-1">
-            <button
-              onClick={() => { setMode('login'); setError('') }}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${mode === 'login' ? 'bg-white shadow-sm' : 'text-muted'}`}
-            >
-              Entrar
-            </button>
-            <button
-              onClick={() => { setMode('register'); setError('') }}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${mode === 'register' ? 'bg-white shadow-sm' : 'text-muted'}`}
-            >
-              Cadastrar
-            </button>
+      {/* Form card */}
+      <div className="flex-1 bg-fundo -mt-1">
+        <div className="max-w-md mx-auto px-4 py-6">
+          <div className="card p-6 shadow-card-hover">
+            {/* Tab switcher */}
+            <div className="flex mb-6 bg-areia rounded-xl p-1 gap-1">
+              <button
+                onClick={() => { setMode('login'); setError('') }}
+                className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all font-head ${
+                  mode === 'login'
+                    ? 'bg-white text-[#1A1A18] shadow-sm'
+                    : 'text-muted hover:text-[#1A1A18]'
+                }`}
+              >
+                Entrar
+              </button>
+              <button
+                onClick={() => { setMode('register'); setError('') }}
+                className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all font-head ${
+                  mode === 'register'
+                    ? 'bg-white text-[#1A1A18] shadow-sm'
+                    : 'text-muted hover:text-[#1A1A18]'
+                }`}
+              >
+                Cadastrar
+              </button>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl mb-5 flex items-start gap-2">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="flex-shrink-0 mt-0.5 stroke-red-500" strokeWidth="1.8" strokeLinecap="round">
+                  <circle cx="10" cy="10" r="8"/>
+                  <path d="M10 6v4M10 13.5v.5"/>
+                </svg>
+                {error}
+              </div>
+            )}
+
+            {mode === 'login' ? (
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="input-icon">
+                  <span className="icon"><IconMail /></span>
+                  <input
+                    type="email"
+                    placeholder="Seu e-mail"
+                    required
+                    value={loginForm.email}
+                    onChange={e => setLoginForm(p => ({ ...p, email: e.target.value }))}
+                    className="input-base pl-10"
+                  />
+                </div>
+                <div className="input-icon">
+                  <span className="icon"><IconLock /></span>
+                  <input
+                    type="password"
+                    placeholder="Sua senha"
+                    required
+                    value={loginForm.password}
+                    onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))}
+                    className="input-base pl-10"
+                  />
+                </div>
+                <button type="submit" disabled={loading} className="btn-sol w-full py-3.5 mt-2 font-head font-bold text-base">
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-[#1A1A18]/30 border-t-[#1A1A18] rounded-full animate-spin"/>
+                      Entrando...
+                    </span>
+                  ) : 'Entrar'}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div className="input-icon">
+                  <span className="icon"><IconUser /></span>
+                  <input
+                    type="text"
+                    placeholder="Nome completo"
+                    required
+                    value={registerForm.name}
+                    onChange={e => setRegisterForm(p => ({ ...p, name: e.target.value }))}
+                    className="input-base pl-10"
+                  />
+                </div>
+                <div className="input-icon">
+                  <span className="icon"><IconMail /></span>
+                  <input
+                    type="email"
+                    placeholder="Seu e-mail"
+                    required
+                    value={registerForm.email}
+                    onChange={e => setRegisterForm(p => ({ ...p, email: e.target.value }))}
+                    className="input-base pl-10"
+                  />
+                </div>
+                <div className="input-icon">
+                  <span className="icon"><IconLock /></span>
+                  <input
+                    type="password"
+                    placeholder="Senha (min. 6 caracteres)"
+                    required
+                    minLength={6}
+                    value={registerForm.password}
+                    onChange={e => setRegisterForm(p => ({ ...p, password: e.target.value }))}
+                    className="input-base pl-10"
+                  />
+                </div>
+                <div className="input-icon">
+                  <span className="icon"><IconPin /></span>
+                  <input
+                    type="text"
+                    placeholder="Bairro (opcional)"
+                    value={registerForm.bairro}
+                    onChange={e => setRegisterForm(p => ({ ...p, bairro: e.target.value }))}
+                    className="input-base pl-10"
+                  />
+                </div>
+                <button type="submit" disabled={loading} className="btn-sol w-full py-3.5 mt-2 font-head font-bold text-base">
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-[#1A1A18]/30 border-t-[#1A1A18] rounded-full animate-spin"/>
+                      Cadastrando...
+                    </span>
+                  ) : 'Criar conta'}
+                </button>
+              </form>
+            )}
+
+            <p className="text-center text-xs text-muted/70 mt-5 font-body">
+              Guia local de Sobradinho-DF · Feito pela comunidade
+            </p>
           </div>
-
-          {error && (
-            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-xl mb-4">{error}</div>
-          )}
-
-          {mode === 'login' ? (
-            <form onSubmit={handleLogin} className="space-y-4">
-              <input
-                type="email" placeholder="E-mail" required
-                value={loginForm.email}
-                onChange={e => setLoginForm(p => ({ ...p, email: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-borda focus:border-sol focus:outline-none text-sm"
-              />
-              <input
-                type="password" placeholder="Senha" required
-                value={loginForm.password}
-                onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-borda focus:border-sol focus:outline-none text-sm"
-              />
-              <button type="submit" disabled={loading} className="btn-sol w-full py-3 font-head font-black">
-                {loading ? 'Entrando...' : 'Entrar'}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleRegister} className="space-y-4">
-              <input
-                type="text" placeholder="Nome completo" required
-                value={registerForm.name}
-                onChange={e => setRegisterForm(p => ({ ...p, name: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-borda focus:border-sol focus:outline-none text-sm"
-              />
-              <input
-                type="email" placeholder="E-mail" required
-                value={registerForm.email}
-                onChange={e => setRegisterForm(p => ({ ...p, email: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-borda focus:border-sol focus:outline-none text-sm"
-              />
-              <input
-                type="password" placeholder="Senha (min 6 caracteres)" required minLength={6}
-                value={registerForm.password}
-                onChange={e => setRegisterForm(p => ({ ...p, password: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-borda focus:border-sol focus:outline-none text-sm"
-              />
-              <input
-                type="text" placeholder="Bairro (opcional)"
-                value={registerForm.bairro}
-                onChange={e => setRegisterForm(p => ({ ...p, bairro: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-borda focus:border-sol focus:outline-none text-sm"
-              />
-              <button type="submit" disabled={loading} className="btn-sol w-full py-3 font-head font-black">
-                {loading ? 'Cadastrando...' : 'Cadastrar'}
-              </button>
-            </form>
-          )}
         </div>
       </div>
     </div>

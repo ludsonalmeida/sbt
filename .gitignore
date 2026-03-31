@@ -2,3 +2,5 @@ node_modules
 dist
 .env
 *.local
+codex-auth.json
+back/src/codex-auth.json

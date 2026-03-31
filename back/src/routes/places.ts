@@ -2,8 +2,28 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../prisma/client'
 import { authMiddleware } from '../middleware/auth'
+import { enrichPlaces } from '../services/apify'
 
 const router = Router()
+
+// ── POST /api/places/enrich ──────────────────────────
+// Enriquece dados de lugares via Apify (Google Maps, Reviews, Business)
+router.post('/enrich', authMiddleware, async (req: any, res) => {
+  try {
+    const schema = z.object({
+      places: z.array(z.object({
+        nome: z.string(),
+        cidade: z.string().optional(),
+      })).min(1).max(5),
+    })
+    const { places } = schema.parse(req.body)
+    const enriched = await enrichPlaces(places)
+    return res.json(enriched)
+  } catch (e: any) {
+    console.error('[places/enrich]', e.message)
+    return res.status(500).json({ error: e.message })
+  }
+})
 
 // ── GET /api/places ──────────────────────────────────
 // Lista lugares com filtros opcionais

@@ -2,11 +2,193 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px;
+    color: #1A1A18;
+  }
+
+  /* Emoji always render as color glyph regardless of surrounding font */
+  .emoji {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
+                 "Twemoji Mozilla", "EmojiOne Color", sans-serif;
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1;
+    display: inline-block;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #E8E2D8; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #D4CBB8; }
+
+  /* Range input */
+  input[type='range'] {
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: #E8E2D8;
+    outline: none;
+  }
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #F5A623;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(245,166,35,0.40);
+    transition: transform 0.15s ease;
+  }
+  input[type='range']::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+}
+
 @layer components {
+  /* ── Buttons ─────────────────────────────── */
   .btn-sol {
-    @apply bg-sol text-[#1A1A18] font-semibold rounded-xl px-6 py-3 transition-all hover:brightness-105 active:scale-[0.98];
+    @apply bg-sol text-[#1A1A18] font-semibold rounded-2xl px-6 py-3
+           transition-all active:scale-[0.97] focus:outline-none
+           disabled:opacity-40 disabled:cursor-not-allowed;
+    font-family: 'Sora', sans-serif;
   }
+  .btn-sol:hover:not(:disabled) {
+    background-color: #D98C0F;
+  }
+  .btn-sol:focus-visible {
+    box-shadow: 0 0 0 3px rgba(245,166,35,0.30);
+  }
+
   .btn-outline {
-    @apply border-2 border-borda text-muted font-semibold rounded-xl px-6 py-3 transition-all hover:border-sol/50;
+    @apply border-2 border-borda text-muted font-semibold rounded-2xl px-6 py-3
+           transition-all active:scale-[0.97] focus:outline-none;
   }
+  .btn-outline:hover {
+    border-color: rgba(245,166,35,0.6);
+    color: #1A1A18;
+  }
+
+  .btn-ghost {
+    @apply text-muted font-medium px-3 py-1.5 rounded-xl transition-colors focus:outline-none;
+  }
+  .btn-ghost:hover {
+    background-color: #F0E9DC;
+    color: #1A1A18;
+  }
+
+  /* ── Inputs ──────────────────────────────── */
+  .input-base {
+    @apply w-full px-4 py-3 rounded-2xl border border-borda bg-white text-sm
+           transition-all focus:outline-none focus:border-sol placeholder:text-muted/60;
+  }
+  .input-base:focus {
+    box-shadow: 0 0 0 3px rgba(245,166,35,0.20);
+  }
+
+  .input-icon {
+    @apply relative;
+  }
+  .input-icon input {
+    @apply pl-10;
+  }
+  .input-icon .icon {
+    @apply absolute left-3 top-1/2 -translate-y-1/2 text-muted/60 w-4 h-4;
+  }
+
+  /* ── Cards ───────────────────────────────── */
+  .card {
+    @apply bg-white rounded-2xl border border-borda/60;
+    box-shadow: 0 2px 12px rgba(26,26,24,0.08);
+  }
+
+  /* ── Chat bubbles ────────────────────────── */
+  .bubble-user {
+    @apply bg-sol text-[#1A1A18] px-4 py-3 rounded-2xl rounded-br-sm whitespace-pre-wrap;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+    box-shadow: 0 1px 4px rgba(245,166,35,0.30), 0 2px 8px rgba(26,26,24,0.06);
+  }
+
+  /* Warm off-white — not pure white. Feels like iMessage/WhatsApp received bubble */
+  .bubble-bot {
+    @apply text-[#1A1A18] px-4 py-3 rounded-2xl rounded-bl-sm whitespace-pre-wrap;
+    background: #F5F1EB;
+    border: 1px solid rgba(232,226,216,0.8);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+    box-shadow: 0 1px 3px rgba(26,26,24,0.06);
+  }
+
+  /* ── Suggestion chips ────────────────────── */
+  .chip {
+    @apply bg-white border border-borda text-sm px-4 py-2 rounded-full
+           transition-all active:scale-[0.97] cursor-pointer;
+    box-shadow: 0 1px 4px rgba(26,26,24,0.06);
+  }
+  .chip:hover {
+    border-color: #F5A623;
+    background-color: #FFF8EC;
+    color: #1A1A18;
+    box-shadow: 0 2px 8px rgba(245,166,35,0.20);
+    transform: translateY(-1px);
+  }
+
+  /* ── Nav action buttons (Maps / Waze) ─────── */
+  .nav-btn {
+    @apply flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl
+           font-semibold text-xs transition-all active:scale-[0.97];
+    box-shadow: 0 1px 4px rgba(26,26,24,0.10);
+  }
+  .nav-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(26,26,24,0.18);
+  }
+  .nav-btn-maps {
+    @apply nav-btn text-white;
+    background: linear-gradient(135deg, #4285F4 0%, #3367D6 100%);
+  }
+  .nav-btn-waze {
+    @apply nav-btn;
+    background: linear-gradient(135deg, #33CCFF 0%, #05B4E0 100%);
+    color: #0A3050;
+  }
+
+  /* ── Sun pulse animation for empty state ─── */
+  @keyframes sun-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245,166,35,0.35), 0 4px 16px rgba(245,166,35,0.25); }
+    50%       { box-shadow: 0 0 0 10px rgba(245,166,35,0.10), 0 4px 16px rgba(245,166,35,0.25); }
+  }
+  .sun-pulse {
+    animation: sun-pulse 2.8s ease-in-out infinite;
+  }
+
+  /* ── Input area top fade ─────────────────── */
+  .input-fade-top {
+    background: linear-gradient(to bottom, transparent, #ffffff);
+    pointer-events: none;
+    height: 32px;
+    position: sticky;
+    bottom: 0;
+  }
+
+  /* ── Sidebar scroll ─────────────────────── */
+  .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+  .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-scroll::-webkit-scrollbar-thumb { background: #E8E2D8; border-radius: 2px; }
 }

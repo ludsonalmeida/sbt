@@ -2,8 +2,26 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../prisma/client'
 import { authMiddleware } from '../middleware/auth'
+// @ts-ignore
+import { callOpenAI } from '../codex-oauth'
 
 const router = Router()
+
+// ── POST /api/chat/send ───────────────────────────────
+router.post('/send', authMiddleware, async (req: any, res) => {
+  try {
+    const schema = z.object({
+      messages: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string() })),
+      systemPrompt: z.string(),
+    })
+    const { messages, systemPrompt } = schema.parse(req.body)
+    const text = await callOpenAI(systemPrompt, messages)
+    return res.json({ text })
+  } catch (e: any) {
+    console.error('[chat/send]', e.message)
+    return res.status(500).json({ error: e.message })
+  }
+})
 
 // ── POST /api/chat/conversations ─────────────────────
 // Salva ou atualiza uma conversa
