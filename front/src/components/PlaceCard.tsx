@@ -126,7 +126,7 @@ export function PlaceCard({ place, loading = false }: Props) {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-head font-bold text-base leading-tight text-[#1A1A18]">
-              {place.nome}
+              {e?.realName ?? place.nome}
             </h3>
             <span className="inline-flex items-center text-xs bg-areia text-muted font-semibold
                              px-2 py-0.5 rounded-full mt-0.5">
@@ -147,6 +147,17 @@ export function PlaceCard({ place, loading = false }: Props) {
             </div>
           )}
         </div>
+
+        {/* Fechado permanentemente */}
+        {e?.permanentlyClosed && (
+          <div className="mt-2 flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-xl px-3 py-1.5">
+            <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="#DC2626" strokeWidth="1.8" strokeLinecap="round" className="flex-shrink-0">
+              <circle cx="10" cy="10" r="8"/><path d="M7 7l6 6M13 7l-6 6"/>
+            </svg>
+            <p className="text-xs text-red-700 font-semibold">Permanentemente fechado</p>
+          </div>
+        )}
+
 
         {/* Why */}
         {place.why && (
