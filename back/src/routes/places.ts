@@ -41,14 +41,14 @@ router.get('/', async (req, res) => {
     return res.json(hit.data)
   }
 
-  const where: any = {}
+  const where: any = { googleTotal: { gte: 10 } }
   if (category) where.category = category as string
   if (search) where.name = { contains: search as string, mode: 'insensitive' }
   if (sponsored === 'true') where.sponsored = true
 
   const places = await prisma.place.findMany({
     where,
-    orderBy: [{ sponsored: 'desc' }, { googleRating: 'desc' }],
+    orderBy: [{ sponsored: 'desc' }, { googleRating: 'desc' }, { googleTotal: 'desc' }],
     take: 100,
   })
 
