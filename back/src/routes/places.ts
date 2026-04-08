@@ -26,9 +26,20 @@ router.post('/enrich', authMiddleware, async (req: any, res) => {
 })
 
 // ── GET /api/places ──────────────────────────────────
-// Lista lugares com filtros opcionais
+// Lista lugares com filtros opcionais. Cache em memória de 5min por chave.
+const listCache = new Map<string, { at: number; data: any }>()
+const LIST_TTL_MS = 5 * 60 * 1000
+
 router.get('/', async (req, res) => {
   const { category, search, sponsored } = req.query
+  const key = `c=${category ?? ''}|s=${search ?? ''}|sp=${sponsored ?? ''}`
+
+  const hit = listCache.get(key)
+  if (hit && Date.now() - hit.at < LIST_TTL_MS) {
+    res.setHeader('X-Cache', 'HIT')
+    res.setHeader('Cache-Control', 'public, max-age=300')
+    return res.json(hit.data)
+  }
 
   const where: any = {}
   if (category) where.category = category as string
@@ -38,10 +49,19 @@ router.get('/', async (req, res) => {
   const places = await prisma.place.findMany({
     where,
     orderBy: [{ sponsored: 'desc' }, { googleRating: 'desc' }],
-    take: 50,
+    take: 100,
   })
 
+  listCache.set(key, { at: Date.now(), data: places })
+  res.setHeader('X-Cache', 'MISS')
+  res.setHeader('Cache-Control', 'public, max-age=300')
   return res.json(places)
+})
+
+// ── POST /api/places/cache/clear ─────────────────────
+router.post('/cache/clear', (_req, res) => {
+  listCache.clear()
+  return res.json({ ok: true })
 })
 
 // ── GET /api/places/:id ──────────────────────────────

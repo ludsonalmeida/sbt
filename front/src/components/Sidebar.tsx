@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../store/authStore'
 
@@ -26,14 +26,14 @@ const REGIOES = [
 
 // ── Categorias de estabelecimentos ───────────────────
 const CATEGORIAS_ESTAB = [
-  { emoji: '🍽️', label: 'Restaurantes', count: 48 },
-  { emoji: '🍺', label: 'Bares', count: 32 },
-  { emoji: '💈', label: 'Barbearias', count: 15 },
-  { emoji: '🛍️', label: 'Lojas', count: 67 },
-  { emoji: '🏪', label: 'Mercados', count: 12 },
-  { emoji: '💪', label: 'Academias', count: 9 },
-  { emoji: '🏥', label: 'Saúde', count: 24 },
-  { emoji: '🎨', label: 'Serviços', count: 41 },
+  { emoji: '🍽️', label: 'Restaurantes', slug: 'restaurantes' },
+  { emoji: '🍺', label: 'Bares',        slug: 'bares' },
+  { emoji: '💈', label: 'Barbearias',   slug: 'barbearias' },
+  { emoji: '🛍️', label: 'Lojas',        slug: 'lojas' },
+  { emoji: '🏪', label: 'Mercados',     slug: 'mercados' },
+  { emoji: '💪', label: 'Academias',    slug: 'academias' },
+  { emoji: '🏥', label: 'Saúde',        slug: 'saude' },
+  { emoji: '🎨', label: 'Serviços',     slug: 'servicos' },
 ]
 
 // ── Notícias mockadas ────────────────────────────────
@@ -264,7 +264,120 @@ export function Sidebar({ open, onClose, activeView, onNavigate }: SidebarProps)
 
 // ── Content Views ────────────────────────────────────
 
+interface PlaceRow {
+  id: string
+  name: string
+  category: string
+  emoji?: string
+  address?: string
+  googleRating?: number
+  googleTotal?: number
+  enrichment?: {
+    photo?: string
+    hoursToday?: string
+    mapsUrl?: string
+    categoryName?: string
+  } | null
+}
+
 export function EstabelecimentosView({ onAskChat }: { onAskChat: (q: string) => void }) {
+  const [selected, setSelected] = useState<{ slug: string; label: string; emoji: string } | null>(null)
+  const [places, setPlaces] = useState<PlaceRow[]>([])
+  const [counts, setCounts] = useState<Record<string, number>>({})
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  // Carrega contagens de cada categoria 1x ao montar
+  useEffect(() => {
+    let cancelled = false
+    Promise.all(
+      CATEGORIAS_ESTAB.map(c =>
+        fetch(`/api/places?category=${c.slug}`).then(r => r.ok ? r.json() : []).catch(() => [])
+      )
+    ).then(results => {
+      if (cancelled) return
+      const map: Record<string, number> = {}
+      CATEGORIAS_ESTAB.forEach((c, i) => { map[c.slug] = Array.isArray(results[i]) ? results[i].length : 0 })
+      setCounts(map)
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  // Carrega lista quando seleciona categoria
+  useEffect(() => {
+    if (!selected) return
+    setLoading(true)
+    setErr(null)
+    fetch(`/api/places?category=${selected.slug}`)
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then((data: PlaceRow[]) => setPlaces(data))
+      .catch(e => setErr(e.message))
+      .finally(() => setLoading(false))
+  }, [selected])
+
+  // ── Lista de lugares de uma categoria ──
+  if (selected) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        <button
+          onClick={() => setSelected(null)}
+          className="text-sm text-muted hover:text-sol-dark mb-4 inline-flex items-center gap-1"
+        >
+          ← Voltar
+        </button>
+
+        <div className="mb-5 flex items-center gap-3">
+          <span className="text-3xl">{selected.emoji}</span>
+          <div>
+            <h2 className="font-head font-extrabold text-2xl">{selected.label}</h2>
+            <p className="text-sm text-muted">{places.length} locais em Sobradinho</p>
+          </div>
+        </div>
+
+        {loading && <p className="text-sm text-muted">Carregando…</p>}
+        {err && <p className="text-sm text-red-600">Erro: {err}</p>}
+
+        {!loading && !err && places.length === 0 && (
+          <p className="text-sm text-muted">Nenhum lugar cadastrado ainda.</p>
+        )}
+
+        <div className="space-y-3">
+          {places.map(p => {
+            const photo = p.enrichment?.photo
+            const hours = p.enrichment?.hoursToday
+            const mapsUrl = p.enrichment?.mapsUrl
+            return (
+              <a
+                key={p.id}
+                href={mapsUrl ?? '#'}
+                target={mapsUrl ? '_blank' : undefined}
+                rel="noreferrer"
+                className="card p-3 flex gap-3 hover:shadow-card-hover transition-all hover:-translate-y-0.5"
+              >
+                {photo ? (
+                  <img src={photo} alt={p.name} loading="lazy" className="w-20 h-20 rounded-xl object-cover flex-shrink-0 bg-areia" />
+                ) : (
+                  <div className="w-20 h-20 rounded-xl bg-areia flex items-center justify-center text-3xl flex-shrink-0">{p.emoji ?? '📍'}</div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-head font-bold text-sm leading-tight truncate">{p.name}</p>
+                  {p.googleRating !== undefined && p.googleRating !== null && (
+                    <p className="text-xs text-muted mt-1">
+                      ⭐ {p.googleRating.toFixed(1)} {p.googleTotal ? `(${p.googleTotal})` : ''}
+                    </p>
+                  )}
+                  {p.address && <p className="text-xs text-muted/70 mt-0.5 truncate">{p.address}</p>}
+                  {hours && <p className="text-xs text-sol-dark mt-0.5">⏰ {hours}</p>}
+                </div>
+              </a>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Grid de categorias ──
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
       <div className="mb-6">
@@ -275,13 +388,13 @@ export function EstabelecimentosView({ onAskChat }: { onAskChat: (q: string) => 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {CATEGORIAS_ESTAB.map(cat => (
           <button
-            key={cat.label}
-            onClick={() => onAskChat(`Me indica ${cat.label.toLowerCase()} bons em Sobradinho`)}
+            key={cat.slug}
+            onClick={() => setSelected(cat)}
             className="card p-4 hover:shadow-card-hover transition-all hover:-translate-y-0.5 text-left group"
           >
             <span className="text-2xl block mb-2">{cat.emoji}</span>
             <p className="font-head font-semibold text-sm group-hover:text-sol-dark transition-colors">{cat.label}</p>
-            <p className="text-xs text-muted/60 mt-0.5">{cat.count} locais</p>
+            <p className="text-xs text-muted/60 mt-0.5">{counts[cat.slug] ?? '…'} locais</p>
           </button>
         ))}
       </div>
