@@ -19,22 +19,87 @@ const SOBRADINHO_LNG = -47.7900
 const SOBRADINHO_ZOOM = 14
 
 interface CategoryDef {
-  key: string        // valor salvo em Place.category (slug)
+  key: string
   emoji: string
-  queries: string[]  // termos de busca pro Apify
-  perQuery: number   // quantos lugares por query
+  queries: string[]
+  perQuery: number
+  // palavras-chave aceitas na categoria reportada pelo Google
+  allow: string[]
+  // palavras-chave que invalidam (hard reject)
+  deny?: string[]
 }
 
 const CATEGORIES: CategoryDef[] = [
-  { key: 'restaurantes', emoji: '🍽️',  queries: ['restaurantes em Sobradinho DF'], perQuery: 50 },
-  { key: 'bares',        emoji: '🍻',  queries: ['bares em Sobradinho DF', 'pubs em Sobradinho DF'], perQuery: 35 },
-  { key: 'barbearias',   emoji: '💈',  queries: ['barbearias em Sobradinho DF'], perQuery: 30 },
-  { key: 'lojas',        emoji: '🛍️',  queries: ['lojas em Sobradinho DF', 'roupas em Sobradinho DF'], perQuery: 35 },
-  { key: 'mercados',     emoji: '🏪',  queries: ['supermercados em Sobradinho DF', 'mercados em Sobradinho DF'], perQuery: 30 },
-  { key: 'academias',    emoji: '💪',  queries: ['academias em Sobradinho DF'], perQuery: 30 },
-  { key: 'saude',        emoji: '🏥',  queries: ['clínicas em Sobradinho DF', 'farmácias em Sobradinho DF'], perQuery: 25 },
-  { key: 'servicos',     emoji: '🛠️',  queries: ['serviços em Sobradinho DF', 'oficinas em Sobradinho DF'], perQuery: 25 },
+  {
+    key: 'restaurantes', emoji: '🍽️',
+    queries: ['restaurantes em Sobradinho DF'],
+    perQuery: 50,
+    allow: ['restaurante','pizzaria','hamburgueria','churrascaria','self service','self-service','comida','cozinha','marmitaria','buffet','lanchonete','bistrô','bistro','rodízio','rodizio','espetinho','grill','steakhouse','gastronomia'],
+    deny: ['academia','salão','salao','beleza','igreja','escola','oficina','auto'],
+  },
+  {
+    key: 'bares', emoji: '🍻',
+    queries: ['bares em Sobradinho DF', 'pubs em Sobradinho DF'],
+    perQuery: 35,
+    allow: ['bar','pub','cervejaria','boteco','botequim','gastrobar','chopperia','choperia','tabacaria','distribuidora de bebidas','drinks','petiscaria'],
+    deny: ['academia','beleza','barbearia','farmácia','farmacia','supermercado','salão','salao','estética','estetica','espaço de beleza','espaco de beleza','manicure','pedicure','cabeleireiro'],
+  },
+  {
+    key: 'barbearias', emoji: '💈',
+    queries: ['barbearias em Sobradinho DF'],
+    perQuery: 30,
+    allow: ['barbearia','barbeiro','barber'],
+    deny: ['salão','salao','beleza','estética','estetica'],
+  },
+  {
+    key: 'lojas', emoji: '🛍️',
+    queries: ['lojas em Sobradinho DF', 'roupas em Sobradinho DF'],
+    perQuery: 35,
+    allow: ['loja','boutique','roupa','moda','calçado','calcado','brechó','brecho','acessório','acessorio','papelaria','livraria','ótica','otica','joalheria','presente','floricultura'],
+    deny: ['restaurante','bar','academia','farmácia','farmacia','supermercado','mercado'],
+  },
+  {
+    key: 'mercados', emoji: '🏪',
+    queries: ['supermercados em Sobradinho DF', 'mercados em Sobradinho DF'],
+    perQuery: 30,
+    allow: ['supermercado','mercado','hipermercado','atacado','hortifruti','mercearia','sacolão','sacolao','empório','emporio'],
+    deny: ['restaurante','academia','farmácia','farmacia','bar'],
+  },
+  {
+    key: 'academias', emoji: '💪',
+    queries: ['academias em Sobradinho DF'],
+    perQuery: 30,
+    allow: ['academia','gym','fitness','crossfit','pilates','yoga','musculação','musculacao','treinamento','studio'],
+    deny: ['restaurante','bar','farmácia','farmacia'],
+  },
+  {
+    key: 'saude', emoji: '🏥',
+    queries: ['clínicas em Sobradinho DF', 'farmácias em Sobradinho DF'],
+    perQuery: 25,
+    allow: ['clínica','clinica','consultório','consultorio','médico','medico','dentista','dental','farmácia','farmacia','drogaria','hospital','laboratório','laboratorio','fisioterapia','psicologia','psiquiatria','veterinário','veterinario','saúde','saude'],
+    deny: ['restaurante','bar','academia','loja'],
+  },
+  {
+    key: 'servicos', emoji: '🛠️',
+    queries: ['serviços em Sobradinho DF', 'oficinas em Sobradinho DF'],
+    perQuery: 25,
+    allow: ['oficina','mecânica','mecanica','auto','lava jato','lava-jato','chaveiro','elétrica','eletrica','eletricista','encanador','conserto','assistência','assistencia','gráfica','grafica','lavanderia','imobiliária','imobiliaria','cartório','cartorio','contabilidade','despachante','serralheria','marcenaria'],
+    deny: ['restaurante','bar','academia','farmácia','farmacia','supermercado'],
+  },
 ]
+
+function wordMatch(pool: string, term: string): boolean {
+  if (term.includes(' ')) return pool.includes(term)
+  const re = new RegExp(`(^|[^a-zà-ú])${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-zà-ú]|$)`, 'i')
+  return re.test(pool)
+}
+
+function matchesCategory(cat: CategoryDef, name: string, categoryName?: string, categories?: string[]): boolean {
+  const fullPool = `${name} ${categoryName ?? ''} ${(categories ?? []).join(' ')}`.toLowerCase().trim()
+  if (!fullPool) return false
+  if (cat.deny?.some(d => wordMatch(fullPool, d))) return false
+  return cat.allow.some(a => wordMatch(fullPool, a))
+}
 
 const SOBRADINHO_RADIUS_KM = 12
 
@@ -105,6 +170,12 @@ async function seedCategory(cat: CategoryDef) {
   for (const it of items) {
     if (it.permanentlyClosed) { skipped++; continue }
     if (!isInSobradinho(it.address, it.location?.lat, it.location?.lng)) { skipped++; continue }
+
+    // valida categoria reportada pelo Google contra allow/deny
+    if (!matchesCategory(cat, it.title ?? '', it.categoryName, it.categories)) {
+      skipped++
+      continue
+    }
 
     const placeId = it.placeId ?? it.fid ?? it.cid
     if (!placeId) { skipped++; continue }
