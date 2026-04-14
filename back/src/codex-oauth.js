@@ -187,7 +187,7 @@ async function callOpenAI(systemPrompt, messages) {
       'accept': 'text/event-stream',
     },
     body: JSON.stringify({
-      model: 'gpt-5-codex-mini',
+      model: 'gpt-5.4-mini',
       instructions: systemPrompt,
       input: inputMessages,
       stream: true,

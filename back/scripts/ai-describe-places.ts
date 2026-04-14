@@ -1,4 +1,4 @@
-// Gera descrição interpretativa de cada Place via Codex OAuth (gpt-5-codex-mini).
+// Gera descrição interpretativa de cada Place via Codex OAuth (gpt-5.4-mini).
 // Lê reviews + categoria + nome e produz: { tipo, publico, vibe, resumo }
 // Salva em enrichment.ai e marca enrichment.aiAt.
 //
