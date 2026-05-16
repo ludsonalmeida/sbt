@@ -4,3 +4,5 @@ dist
 *.local
 codex-auth.json
 back/src/codex-auth.json
+codex-auth.oneline.txt
+back/src/codex-auth.oneline.txt
